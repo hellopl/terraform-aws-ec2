@@ -1,7 +1,3 @@
-locals {
-  alphabet = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]     # Define a list of alphabet letters, to be used later for naming subnets. Instead of numbering in digits, it will be in letters A, B, C...
-}
-
 data "aws_availability_zones" "zone" {}
 
 data "aws_ami" "latest_amazon_linux2" {
@@ -17,25 +13,36 @@ data "aws_ami" "latest_amazon_linux2" {
     }
 }
 
-/*
-resource "aws_vpc" "this" {
-    cidr_block                          = var.vpc_cidr
-    assign_generated_ipv6_cidr_block    = true     # Automatically generate an IPv6 CIDR block for the VPC
+#----------------------------------Use default VPC and create IGW----------------------------------
+
+resource "aws_default_vpc" "default" {}
+
+resource "aws_internet_gateway" "this" {
+    vpc_id  = aws_default_vpc.default.id
 
     tags = {
-        Name = "${var.env} VPC2"                   # the scheme of VPC2 see in the repo's README  
+        Name = "Default IGW"
     }
 }
-*/
+#----------------------------------Create and attach EIP to instance--------------------------------
+
+
+resource "aws_eip" "my_static_ip" {
+  instance  = aws_instance.this.id
+  vpc       = true
+  
+  tags = {
+      Region = var.region
+  }
+}
 
 resource "aws_instance" "this" {
     ami                     = data.aws_ami.latest_amazon_linux2.id
     availability_zone       = data.aws_availability_zones.zone.names[0]
     instance_type           = var.instance_type
     vpc_security_group_ids  = [aws_security_group.this.id]
-    user_data               = file("user_data.sh")
 
-#    tags                    = merge(var.common_tags, { Name = "${var.common_tags["Environment"]} Server "})
+    user_data               = file("user_data.sh")
 }
 
 #-------------------# Creating and attaching EBS volume - Disk 2 ----------------------------
@@ -106,24 +113,20 @@ resource "aws_security_group" "this" {
         protocol        = "-1"
         cidr_blocks     = ["0.0.0.0/0"]
     }
-
-#    tags                  = merge(var.common_tags, { Name = "${var.common_tags["Environment"]} Server SecurityGroup"})
 }
 
-#----------------------------------Create and attach EIP to instance--------------------------------
+resource "aws_route_table" "public" {
+    vpc_id = aws_default_vpc.default.id
 
-/*
-resource "aws_eip" "my_static_ip" {
-  instance  = aws_instance.this.id
-  vpc       = true
-
-#  tags      = merge(var.common_tags, { Name = "${var.common_tags["Environment"]} Server Elastic IP"})
-  
-  tags = {
-      name = "Server Elastic IP"
-      Owner ="PavelS"
-      Project = "T1000"
-      Region = var.region
-  }
+    route {
+        cidr_block          = "0.0.0.0/0"
+        gateway_id          = aws_internet_gateway.this.id              #IPv4 goes through IGW
+    }
 }
-*/
+
+resource "aws_route_table_association" "public" {
+    count           = length(aws_subnet.private[*].id)                  # Number of private subnet IDs
+
+    route_table_id  = aws_route_table.private[count.index].id           # ID of the private route table for each subnet
+    subnet_id       = element(aws_subnet.private[*].id, count.index)    # ID of each private subnet
+}

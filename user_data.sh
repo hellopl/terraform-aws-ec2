@@ -17,6 +17,7 @@ cat <<EOF > /var/www/html/index.html
 </html>
 EOF
 
+echo "<pre>$listdisks</pre>" >> /var/www/html/index.html
 
 sudo systemctl start httpd.service
 sudo systemctl enable httpd.service
