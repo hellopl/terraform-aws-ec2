@@ -4,7 +4,7 @@ yum -y install httpd
 
 
 myip=`curl http://169.254.169.254/latest/meta-data/local-ipv4`
-listdisks=`fdisk -l | base64`
+listdisks=`df`
 
 cat <<EOF > /var/www/html/index.html
 <html>

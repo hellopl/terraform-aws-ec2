@@ -24,6 +24,7 @@ resource "aws_internet_gateway" "this" {
         Name = "Default IGW"
     }
 }
+
 #----------------------------------Create and attach EIP to instance--------------------------------
 
 
@@ -45,7 +46,7 @@ resource "aws_instance" "this" {
     user_data               = file("user_data.sh")
 }
 
-#-------------------# Creating and attaching EBS volume - Disk 2 ----------------------------
+#-------------------# Creating and attaching EBS volume - Disk 2 ---------------------------------
 
 resource "aws_ebs_volume" "disk2" {
     availability_zone = data.aws_availability_zones.zone.names[0]
@@ -67,7 +68,7 @@ resource "aws_volume_attachment" "disk2" {
     instance_id = aws_instance.this.id          # attach disk 2 to EC2 instance
 }
 
-#-------------------# Creating and attaching EBS volume - Disk 3 ----------------------------
+#-------------------# Creating and attaching EBS volume - Disk 3 ------------------------------
 
 resource "aws_ebs_volume" "disk3" {
     availability_zone = data.aws_availability_zones.zone.names[0]
@@ -90,7 +91,7 @@ resource "aws_volume_attachment" "disk3" {
     instance_id = aws_instance.this.id          # attach disk 3 to EC2 instance
 }
 
-#-------------------------Creating Security Group ------------------------
+#-------------------------Creating Security Group -------------------------------------------
 
 resource "aws_security_group" "this" {
     name      = "My Security Group"
