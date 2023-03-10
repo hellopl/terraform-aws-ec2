@@ -61,11 +61,10 @@ resource "aws_ebs_volume" "disk2" {
 
 }
 
-# attach disk 2 to EC2 instance
 resource "aws_volume_attachment" "disk2" {
     device_name = "/dev/sdb"
     volume_id   = aws_ebs_volume.disk2.id
-    instance_id = aws_instance.this.id
+    instance_id = aws_instance.this.id          # attach disk 2 to EC2 instance
 }
 
 #-------------------# Creating and attaching EBS volume - Disk 3 ----------------------------
@@ -85,11 +84,10 @@ resource "aws_ebs_volume" "disk3" {
 
 }
 
-# attach disk 3 to EC2 instance
 resource "aws_volume_attachment" "disk3" {
     device_name = "/dev/sdc"
     volume_id   = aws_ebs_volume.disk3.id
-    instance_id = aws_instance.this.id
+    instance_id = aws_instance.this.id          # attach disk 3 to EC2 instance
 }
 
 #-------------------------Creating Security Group ------------------------
@@ -122,11 +120,4 @@ resource "aws_route_table" "public" {
         cidr_block          = "0.0.0.0/0"
         gateway_id          = aws_internet_gateway.this.id              #IPv4 goes through IGW
     }
-}
-
-resource "aws_route_table_association" "public" {
-    count           = length(aws_subnet.private[*].id)                  # Number of private subnet IDs
-
-    route_table_id  = aws_route_table.private[count.index].id           # ID of the private route table for each subnet
-    subnet_id       = element(aws_subnet.private[*].id, count.index)    # ID of each private subnet
 }
