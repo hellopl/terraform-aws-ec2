@@ -16,6 +16,7 @@ provider "aws" {
             env         = "Development"
             owner       = "Pavel Sevko"
             terraform   = "true"
+            Name        = "EC2 - task 1 with 2 additional EBS"
         }
     }
 }

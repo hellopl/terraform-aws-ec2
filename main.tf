@@ -17,6 +17,7 @@ data "aws_ami" "latest_amazon_linux2" {
 
 resource "aws_default_vpc" "default" {}
 
+/*
 resource "aws_internet_gateway" "this" {
     vpc_id  = aws_default_vpc.default.id
 
@@ -28,6 +29,7 @@ resource "aws_internet_gateway" "this" {
 #----------------------------------Create and attach EIP to instance--------------------------------
 
 
+
 resource "aws_eip" "my_static_ip" {
   instance  = aws_instance.this.id
   vpc       = true
@@ -36,12 +38,17 @@ resource "aws_eip" "my_static_ip" {
       Region = var.region
   }
 }
+*/
 
 resource "aws_instance" "this" {
     ami                     = data.aws_ami.latest_amazon_linux2.id
     availability_zone       = data.aws_availability_zones.zone.names[0]
     instance_type           = var.instance_type
     vpc_security_group_ids  = [aws_security_group.this.id]
+    root_block_device {
+        volume_size = "10"
+        volume_type = "gp3"                             # in some regions gp3 type is not AVAILABLE
+    }
 
     user_data               = file("user_data.sh")
 }
@@ -68,7 +75,7 @@ resource "aws_volume_attachment" "disk2" {
     instance_id = aws_instance.this.id          # attach disk 2 to EC2 instance
 }
 
-#-------------------# Creating and attaching EBS volume - Disk 3 ------------------------------
+#----------------_---# Creating and attaching EBS volume - Disk 3 ------------------------------
 
 resource "aws_ebs_volume" "disk3" {
     availability_zone = data.aws_availability_zones.zone.names[0]
@@ -91,7 +98,7 @@ resource "aws_volume_attachment" "disk3" {
     instance_id = aws_instance.this.id          # attach disk 3 to EC2 instance
 }
 
-#-------------------------Creating Security Group -------------------------------------------
+#-----------------------_--Creating Security Group -------------------------------------------
 
 resource "aws_security_group" "this" {
     name      = "My Security Group"
@@ -114,6 +121,7 @@ resource "aws_security_group" "this" {
     }
 }
 
+/*
 resource "aws_route_table" "public" {
     vpc_id = aws_default_vpc.default.id
 
@@ -122,3 +130,4 @@ resource "aws_route_table" "public" {
         gateway_id          = aws_internet_gateway.this.id              #IPv4 goes through IGW
     }
 }
+*/
